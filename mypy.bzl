@@ -104,6 +104,7 @@ def _mypy_rule_impl(ctx, is_aspect = False):
         base_rule = ctx.rule
 
     mypy_config_file = ctx.file._mypy_config
+    external_deps_file = ctx.actions.declare_file("_%s.external_deps" % base_rule.attr.name)
 
     mypypath_parts = []
     direct_src_files = []
@@ -149,7 +150,7 @@ def _mypy_rule_impl(ctx, is_aspect = False):
     # Compose a list of the files needed for use. Note that aspect rules can use
     # the project version of mypy however, other rules should fall back on their
     # relative runfiles.
-    runfiles = ctx.runfiles(files = src_files + stub_files + [mypy_config_file])
+    runfiles = ctx.runfiles(files = src_files + stub_files + [mypy_config_file, external_deps_file])
     if not is_aspect:
         runfiles = runfiles.merge(ctx.attr._mypy_cli.default_runfiles)
 
@@ -177,6 +178,7 @@ def _mypy_rule_impl(ctx, is_aspect = False):
             "{OUTPUT}": out.path if out else "",
             "{MYPYPATH_PATH}": mypypath if mypypath else "",
             "{MYPY_INI_PATH}": mypy_config_file.path,
+            "{EXTERNAL_DEPS_FILE}": external_deps_file.path,
         },
         is_executable = True,
     )
